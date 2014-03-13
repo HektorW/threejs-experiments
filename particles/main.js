@@ -37,6 +37,7 @@ function init() {
 	window.addEventListener('resize', onResize);
 	window.addEventListener('deviceorientation', onOrientation);
 	window.addEventListener('click', onClick);
+	// window.addEventListener('touchmove', onTouchMove);
 }
 
 function setupParticles() {
@@ -73,6 +74,11 @@ function setupParticles() {
 }
 
 
+function onTouchMove(ev) {
+	numParticles += 5;
+	ev.preventDefault();
+	setupParticles();
+}
 
 function onClick() {
 	numParticles += 1000;
