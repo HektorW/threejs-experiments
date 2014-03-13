@@ -80,8 +80,8 @@ function onTouchMove(ev) {
 	setupParticles();
 }
 
-function onClick() {
-	numParticles += 1000;
+function onClick(ev) {
+	numParticles += 1000 * (ev.which === 3 ? -1 : 1);
 	setupParticles();
 }
 
