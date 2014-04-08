@@ -2,6 +2,7 @@ var renderer, scene, camera;
 
 var pointLight;
 
+var buildings;
 var buildingCount = 300;
 var size = 300;
 
@@ -50,6 +51,7 @@ function initThree() {
 function initCity() {
   var g, m, o, s, h;
 
+
   // floor
   g = new THREE.PlaneGeometry(size, size);
   m = new THREE.MeshBasicMaterial({
@@ -63,6 +65,7 @@ function initCity() {
 
 
   // buildings
+  buildings = [];
   for (var i = buildingCount; i--;) {
     s = rand(minSize, maxSize);
     h = rand(minHeight, maxHeight);
@@ -78,6 +81,7 @@ function initCity() {
     o.position.y = h / 2.0;
     o.position.z = rand(-size / 2, size / 2);
     scene.add(o);
+    buildings.push(o);
   }
 
 
@@ -93,11 +97,9 @@ function initControls() {
   window.addEventListener('keydown', function(ev) {
     switch (ev.keyCode) {
       case 65:
-        // camRot += 0.05;
         camera.position.x += 1;
         break;
       case 68:
-        // camRot -= 0.05;
         camera.position.x -= 1;
         break;
       case 87:
@@ -108,12 +110,6 @@ function initControls() {
         break;
     }
 
-    // camera.lookAt(Math.cos(camRot), 0.0, Math.sin(camRot));
-    // var v = new THREE.Vector3(Math.cos(camRot), 0.0, Math.sin(camRot));
-    // var l = new THREE.Vector3();
-    // l.copy(camera.position);
-    // l.add(v);
-    // camera.lookAt(l);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
     pointLight.position.copy(camera.position);
   }, false);
