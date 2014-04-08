@@ -1,5 +1,6 @@
 
 var io = require('socket.io').listen(8090);
+io.set('log level', 0);
 
 var stub = { emit: function() {}, on: function() {} }
 
@@ -8,9 +9,9 @@ var controls = stub;
 
 io.sockets.on('connection', function (socket) {
   socket.on('role', function (role) {
-    if (data === 'client')
+    if (role === 'client')
       setupClient(socket);
-    else if (data === 'controls')
+    else if (role === 'controls')
       setupControls(socket);
   });
 });

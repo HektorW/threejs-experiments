@@ -1,4 +1,5 @@
 var renderer, scene, camera;
+var socket;
 
 var pointLight;
 
@@ -18,6 +19,7 @@ function init() {
   initThree();
   initCity();
   initControls();
+  initConnection();
 }
 
 function initThree() {
@@ -115,7 +117,23 @@ function initControls() {
   }, false);
 }
 
+function initConnection() {
+  socket = io.connect(':8090');
 
+  socket.on('connect', function () {
+    socket.emit('role', 'client');
+    console.log('connected');
+  });
+  socket.on('orientation', function (data) {
+    // console.log(JSON.stringify(data));
+    var p = camera.position;
+    var l = new THREE.Vector3(data.beta, data.gamma, data.alpha);
+    var v = new THREE.Vector3();
+    v.copy(p);
+    v.add(l);
+    camera.lookAt(v);
+  });
+}
 
 function render(t) {
   window.requestAnimationFrame(render);
