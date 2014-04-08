@@ -1,7 +1,9 @@
 var renderer, scene, camera;
 
-var buildingCount = 100;
-var size = 100;
+var pointLight;
+
+var buildingCount = 300;
+var size = 300;
 
 var maxHeight = 20;
 var minHeight = 5;
@@ -24,7 +26,18 @@ function initThree() {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1100);
   camera.lookAt(new THREE.Vector3(0, 0, 0));
-  camera.position.y = 5.0;
+  camera.position.y = 10.0;
+
+  scene.add(new THREE.AmbientLight(0x404040));
+
+  var dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+  dirLight.position.set(1, 1, 1);
+  // scene.add(dirLight);
+
+  pointLight = new THREE.PointLight(0xffffff, 2.0, 20.0);
+  scene.add(pointLight);
+
+  scene.fog = new THREE.Fog(0xaaaaaa, 1.0, 100.0);
 
   var el = document.createElement('div');
   el.appendChild(renderer.domElement);
@@ -39,7 +52,10 @@ function initCity() {
 
   // floor
   g = new THREE.PlaneGeometry(size, size);
-  m = new THREE.MeshBasicMaterial({ color: 0xaaaaaa, side: THREE.DoubleSide });
+  m = new THREE.MeshBasicMaterial({
+    color: 0xaaaaaa,
+    side: THREE.DoubleSide
+  });
   o = new THREE.Mesh(g, m);
   o.rotateX(Math.PI / 2);
 
@@ -47,35 +63,61 @@ function initCity() {
 
 
   // buildings
-  for(var i = buildingCount; i--; ) {
+  for (var i = buildingCount; i--;) {
     s = rand(minSize, maxSize);
-    h = rand(minHeight, maxHeight)
+    h = rand(minHeight, maxHeight);
     g = new THREE.CubeGeometry(s, h, s);
-    m = new THREE.MeshBasicMaterial({ color: 0xff4136, side: THREE.DoubleSide });
+    m = new THREE.MeshPhongMaterial({
+      ambient: 0xff4136,
+      color: 0xff4136,
+      // specualar: 0xff4136,
+      side: THREE.DoubleSide
+    });
     o = new THREE.Mesh(g, m);
     o.position.x = rand(-size / 2, size / 2);
     o.position.y = h / 2.0;
     o.position.z = rand(-size / 2, size / 2);
     scene.add(o);
   }
+
+
+  g = new THREE.CubeGeometry(size, size, size);
+  m = new THREE.MeshBasicMaterial({
+    color: 0xaaaaaa,
+    side: THREE.DoubleSide
+  });
+  scene.add(new THREE.Mesh(g, m));
 }
 
 function initControls() {
   window.addEventListener('keydown', function(ev) {
     switch (ev.keyCode) {
-      case 65: camRot += 0.1; break;
-      case 68: camRot -= 0.1; break;
-      case 87: camera.position.z += 1; break;
-      case 83: camera.position.z -= 1; break;
+      case 65:
+        // camRot += 0.05;
+        camera.position.x += 1;
+        break;
+      case 68:
+        // camRot -= 0.05;
+        camera.position.x -= 1;
+        break;
+      case 87:
+        camera.position.z += 1;
+        break;
+      case 83:
+        camera.position.z -= 1;
+        break;
     }
 
     // camera.lookAt(Math.cos(camRot), 0.0, Math.sin(camRot));
-    camera.lookAt(new THREE.Vector3(Math.cos(camRot), 0.0, Math.sin(camRot)));
+    // var v = new THREE.Vector3(Math.cos(camRot), 0.0, Math.sin(camRot));
+    // var l = new THREE.Vector3();
+    // l.copy(camera.position);
+    // l.add(v);
+    // camera.lookAt(l);
+    camera.lookAt(new THREE.Vector3(0, 0, 0));
+    pointLight.position.copy(camera.position);
   }, false);
 }
-
-
-
 
 
 
@@ -90,17 +132,7 @@ render();
 
 
 
-
-
-
-
-
-
-
-
-
-
 // utils
 function rand(min, max) {
-  return (Math.random() * (max-min)) + min;
+  return (Math.random() * (max - min)) + min;
 }
