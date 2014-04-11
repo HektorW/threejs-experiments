@@ -14,6 +14,19 @@ var minSize = 3;
 
 var camRot = 0.0;
 
+var moving = false;
+
+var devor = {
+  x: 0,
+  y: 0,
+  z: 0
+};
+var DEGTORAD = Math.PI / 180;
+var cos = Math.cos;
+var sin = Math.sin;
+
+var rotationMatrix = new THREE.Matrix4();
+
 
 function init() {
   initThree();
@@ -57,7 +70,7 @@ function initCity() {
   // floor
   g = new THREE.PlaneGeometry(size, size);
   m = new THREE.MeshBasicMaterial({
-    color: 0xaaaaaa,
+    color: 0x001f3f,
     side: THREE.DoubleSide
   });
   o = new THREE.Mesh(g, m);
@@ -120,28 +133,88 @@ function initControls() {
 function initConnection() {
   socket = io.connect(':8090');
 
-  socket.on('connect', function () {
+  socket.on('connect', function() {
     socket.emit('role', 'client');
     console.log('connected');
   });
-  socket.on('orientation', function (data) {
-    // console.log(JSON.stringify(data));
-    var p = camera.position;
-    var l = new THREE.Vector3(data.beta, data.gamma, data.alpha);
-    var v = new THREE.Vector3();
-    v.copy(p);
-    v.add(l);
-    camera.lookAt(v);
+  socket.on('orientation', function(data) {
+    // var p = camera.position;
+    // var l = new THREE.Vector3(data.x, data.y, data.z);
+    // var v = new THREE.Vector3();
+    // v.copy(p);
+    // v.add(l);
+    // camera.lookAt(v);
+
+    devor.x = data.x;
+    devor.y = data.y;
+    devor.z = data.z;
+
+    document.getElementById('out').innerHTML = '[ ' + data.x + ', ' + data.y + ', ' + data.z + ' ]';
+  });
+  socket.on('move:start', function(data) {
+    moving = true;
+  });
+  socket.on('move:end', function(data) {
+    moving = false;
   });
 }
 
+function calcRotationMatrix() {
+  var x = (devor.x || 0) * DEGTORAD;
+  var y = (devor.y || 0) * DEGTORAD;
+  var z = (devor.z || 0) * DEGTORAD;
+
+
+  var cosx = cos(x);
+  var sinx = sin(x);
+  var cosy = cos(y);
+  var siny = sin(y);
+  var cosz = cos(z);
+  var sinz = sin(z);
+
+
+  var m11 = cosy * cosz - sinx * siny * sinz;
+  var m12 = -cosx * sinz;
+  var m13 = cosz * siny + cosy * sinx * sinz;
+
+  var m21 = cosz * sinx * siny + cosy * sinz;
+  var m22 = cosx * cosz;
+  var m23 = siny * sinz - cosy * cosz * sinx;
+
+  var m31 = -cosx * siny;
+  var m32 = sinx;
+  var m33 = cosx * cosy;
+
+  rotationMatrix.set(
+    m11, m12, m13, 0,
+    m21, m22, m23, 0,
+    m31, m32, m33, 0,
+    0, 0, 0, 1
+  );
+}
+
+
+
 function render(t) {
   window.requestAnimationFrame(render);
+
+  var elapsed = (t - lasttime) / 1000.0;
+  lasttime = t;
+
+  calcRotationMatrix();
+  camera.quaternion.setFromRotationMatrix(rotationMatrix);
+
+  if (moving) {
+    camera.position.x += camera.rotation.x * 10 * elapsed;
+    camera.position.y += camera.rotation.y * 10 * elapsed;
+    camera.position.z += camera.rotation.z * 10 * elapsed;
+  }
 
   renderer.render(scene, camera);
 }
 
 init();
+var lasttime = performance.now();
 render();
 
 
