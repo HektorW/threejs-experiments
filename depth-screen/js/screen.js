@@ -3,13 +3,15 @@
   if (typeof define !== 'undefined' && define.amd) {
     define(['threejs'], factory);
   } else {
-    factory(THREE);
+    window.DepthScreen = factory(THREE);
   }
 
 }(function(THREE) {
 
   var displace_vert = (function() {/*
     uniform sampler2D heightTexture;
+    uniform vec2 heightTextureUV;
+
     uniform float heightValue;
 
     varying vec2 vUv;
@@ -19,49 +21,50 @@
       return vec4(val, val, val, color.a);
     }
 
-
-    vec4 luminosity(vec4 color) {
-      float v = (0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b) / 3.0;
-      return vec4(v, v, v, color.a);
-    }
-
     void main() {
       vUv = uv;
 
-      vec4 color = luminosity(texture2D(heightTexture, uv));
+      vec4 color = grayscale(texture2D(heightTexture, heightTextureUV));
       vec3 pos = position;
       float value = color.r;
 
-      pos.z = value * heightValue;
+      pos.z += value * heightValue;
+      //if (pos.z < 2.0) pos.z = 2.0;
 
       gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
     }
   */}).toString().split('\n').slice(1, -1).join('\n');
 
+  var displace_frag = (function() {/*
+    uniform sampler2D diffuseTexture;
+    uniform vec2 heightTextureUV;
 
+    varying vec2 vUv;
 
-  /**
-   * @constructor
-   * @param {object} options Contains all options sent to screen
-   */
-  function DepthScreen(options) {
-    if (!options.geometry) {
-      throw new Error('Geometry is required as argument');
+    void main() {
+      vec4 color = texture2D(diffuseTexture, heightTextureUV);
+
+      gl_FragColor = color;
     }
+  */}).toString().split('\n').slice(1, -1).join('\n');
 
-    this.geometry = options.geometry;
+
+
+  function DepthScreen(options) {
+    this.geometry = options.geometry || new THREE.BoxGeometry(1, 1, 1);
 
     this.width_segments = options.width_segments || 40;
     this.height_segments = options.height_segments || 40;
 
-    this.size = options.size || 20;
-    this.margin = options.margin || 4;
+    this.size = typeof options.size === 'number' ? options.size : 20;
+    this.margin = typeof options.margin === 'number' ? options.margin : 4;
 
     this.diffuse_texture = options.diffuse_texture;
     this.height_texture = options.height_texture;
 
     this.init();
   }
+
 
   DepthScreen.prototype.init = function() {
     var scene = this.scene = new THREE.Scene();
@@ -73,12 +76,17 @@
         margin = this.margin,
         halfSize = size / 2;
 
-    this.pixelMeshes = new Array(this.width_segments * this.height_segments);
+    var pixelMeshes = this.pixelMeshes = new Array(this.width_segments * this.height_segments);
 
-    var offsetX = (width_segments / 2) * size + ((width_segments / 2) - 1) * margin;
-    var offsetY = (height_segments / 2) * size + ((height_segments / 2) - 1) * margin;
+    var centerX = width_segments / 2 * size + (width_segments - 1) * margin * 0.5;
+    var centerY = height_segments / 2 * size + (height_segments - 1) * margin * 0.5;
 
     for (var i = this.pixelMeshes.length; i--; ) {
+      var xIndex = (i % width_segments) + 1;
+      var yIndex = Math.floor(i / width_segments) + 1;
+
+      var uvX = xIndex / width_segments;
+      var uvY = yIndex / height_segments;
 
       var material = new THREE.ShaderMaterial({
         uniforms: {
@@ -86,16 +94,33 @@
             type: 't',
             value: null
           },
+          diffuseTexture: {
+            type: 't',
+            value: null
+          },
+          heightValue: {
+            type: 'f',
+            value: 10
+          },
           heightTextureUV: {
             type: 'v2',
-            value: new THREE.Vector2()
+            value: new THREE.Vector2(uvX, uvY)
           }
         },
         vertexShader: displace_vert,
+        fragmentShader: displace_frag,
         side: THREE.DoubleSide
       });
 
       var mesh = new THREE.Mesh(geometry, material);
+
+      var positionX = xIndex * size + ((xIndex - 1) * margin) - centerX;
+      var positionY = yIndex * size + ((yIndex - 1) * margin) - centerY;
+
+      mesh.scale.set(size, size, size);
+      mesh.position.set(positionX, positionY, 0);
+
+      pixelMeshes[i] = mesh;
       scene.add(mesh);
     }
 
@@ -110,7 +135,9 @@
     this.diffuse_texture = diffuse_texture;
     this._updateTextures();
   };
+
   DepthScreen.prototype._updateTextures = function() {
+    // return;
     var height_texture = this.height_texture,
         diffuse_texture = this.diffuse_texture;
 
@@ -120,14 +147,15 @@
 
     for (var i = this.pixelMeshes.length; i--; ) {
       var material = this.pixelMeshes[i].material;
-      material.map = diffuse_texture;
-      material.uniforms.heightTexture.value = heightTexture;
-      material.needsUpdate = true;
+      material.uniforms.diffuseTexture.value = diffuse_texture;
+      material.uniforms.heightTexture.value = height_texture;
     }
   };
 
   DepthScreen.prototype.draw = function(renderer, camera) {
     renderer.render(this.scene, camera);
   };
+
+  return DepthScreen;
 
 }));
