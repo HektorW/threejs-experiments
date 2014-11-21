@@ -31,10 +31,10 @@ var App = (function() {
   App.prototype.initTHREE = function() {
 
     this.depthScreen = new DepthScreen({
-      height_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/dt_beyonce.png'),
-      diffuse_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/dt_beyonce.png'),
-      width_segments: 40,
-      height_segments: 40,
+      height_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/lotten.jpg'),
+      diffuse_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/lotten.jpg'),
+      width_segments: 45,
+      height_segments: 45,
       size: 0.5,
       margin: 0.0
     });
@@ -43,7 +43,7 @@ var App = (function() {
     this.camera.position.z = Math.max(this.depthScreen.width_segments, this.depthScreen.height_segments) * (this.depthScreen.size + this.depthScreen.margin);
 
     this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setClearColor(0xeeeeee, 1);
+    this.renderer.setClearColor(0x000000, 1);
     this.el.appendChild(this.renderer.domElement);
   };
 

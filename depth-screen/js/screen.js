@@ -28,8 +28,8 @@
       vec3 pos = position;
       float value = color.r;
 
-      pos.z += value * heightValue;
-      //if (pos.z < 2.0) pos.z = 2.0;
+      pos.z *= value * heightValue;
+      if (pos.z < 2.0) pos.z = 2.0;
 
       gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
     }
@@ -44,7 +44,7 @@
     void main() {
       vec4 color = texture2D(diffuseTexture, heightTextureUV);
 
-      gl_FragColor = color;
+      gl_FragColor = vec4(color.r, color.g, color.b, 0.9);
     }
   */}).toString().split('\n').slice(1, -1).join('\n');
 
@@ -100,7 +100,7 @@
           },
           heightValue: {
             type: 'f',
-            value: 10
+            value: 12
           },
           heightTextureUV: {
             type: 'v2',
@@ -111,6 +111,8 @@
         fragmentShader: displace_frag,
         side: THREE.DoubleSide
       });
+
+      material.transparent = true;
 
       var mesh = new THREE.Mesh(geometry, material);
 
