@@ -1,3 +1,15 @@
+/**
+ * TODO:
+ * DepthScreen
+ *   not individual shaders but attributes in objects
+ *   switch between black/white height output
+ *   animate height
+ * Resize dropped images
+ * Camera movement
+ * Test in some different browsers
+ * Use webcam
+ */
+
 
 var App = (function() {
 
@@ -36,11 +48,11 @@ var App = (function() {
 
     this.depthScreen = new DepthScreen({
       diffuse_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/profile-image.jpg'),
-      width_segments: 128,
-      height_segments: 128,
+      width_segments: 64,
+      height_segments: 64,
       size: 1.0,
       margin: 0.0,
-      height: 40,
+      height: 20,
       opacity: 0.9
     });
 

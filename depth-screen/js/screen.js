@@ -26,7 +26,7 @@
 
       vec4 color = grayscale(texture2D(heightTexture, heightTextureUV));
       vec3 pos = position;
-      float value = color.r;
+      float value = 1.0 - color.r;
 
       pos.z *= value * heightValue;
       //if (pos.z < 0.0) pos.z = 0.0;
