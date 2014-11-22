@@ -2,9 +2,11 @@
 var App = (function() {
 
   var DepthScreen = window.DepthScreen;
+  var FileHandler = window.FileHandler;
 
   function App() {
     this.init();
+    this.previousNow = performance.now();
     this.update();
   }
 
@@ -13,9 +15,11 @@ var App = (function() {
     this.update = this.update.bind(this);
     this.resize = this.resize.bind(this);
     this.mouseMove = this.mouseMove.bind(this);
+    this.onImageData = this.onImageData.bind(this);
 
     this.initDOM();
     this.initTHREE();
+    this.initFileHandler();
 
     this.resize();
   };
@@ -31,12 +35,13 @@ var App = (function() {
   App.prototype.initTHREE = function() {
 
     this.depthScreen = new DepthScreen({
-      height_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/lotten.jpg'),
-      diffuse_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/lotten.jpg'),
-      width_segments: 45,
-      height_segments: 45,
-      size: 0.5,
-      margin: 0.0
+      diffuse_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/profile-image.jpg'),
+      width_segments: 128,
+      height_segments: 128,
+      size: 1.0,
+      margin: 0.0,
+      height: 40,
+      opacity: 0.9
     });
 
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000.0);
@@ -45,6 +50,12 @@ var App = (function() {
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setClearColor(0x000000, 1);
     this.el.appendChild(this.renderer.domElement);
+  };
+
+  App.prototype.initFileHandler = function() {
+    this.fileHandler = new FileHandler();
+
+    this.fileHandler.on('imagedata', this.onImageData);
   };
 
 
@@ -67,15 +78,19 @@ var App = (function() {
   App.prototype.update = function() {
     requestAnimationFrame(this.update);
     var now = performance.now();
-    
+    var time = {
+      now: now,
+      elapsed: (now - this.previousNow) / 1000.0
+    };
+    this.previousNow = now;
 
-    this.draw(now);
+    this.draw(time);
   };
 
   App.prototype.draw = function(time) {
     // this.camera.position.x = Math.cos( time * 0.001 );
 
-    this.camera.position.x += ((this.mouseX - (window.innerWidth / 2)) - this.camera.position.x) * 0.0005;
+    this.camera.position.x += ((this.mouseX - (window.innerWidth / 2)) - this.camera.position.x) * 0.05 * time.elapsed;
     if (this.camera.position.x < -50) this.camera.position.x = -50;
     if (this.camera.position.x > 50) this.camera.position.x = 50;
 
@@ -85,6 +100,12 @@ var App = (function() {
     this.depthScreen.draw(this.renderer, this.camera);
   };
 
+
+
+
+  App.prototype.onImageData = function(imageData) {
+    this.depthScreen.setDiffuseTexture(THREE.ImageUtils.loadTexture(imageData.data));
+  };
 
   return App;
 }());

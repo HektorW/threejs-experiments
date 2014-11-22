@@ -29,7 +29,7 @@
       float value = color.r;
 
       pos.z *= value * heightValue;
-      if (pos.z < 2.0) pos.z = 2.0;
+      //if (pos.z < 0.0) pos.z = 0.0;
 
       gl_Position = projectionMatrix * modelViewMatrix * vec4( pos, 1.0 );
     }
@@ -44,7 +44,7 @@
     void main() {
       vec4 color = texture2D(diffuseTexture, heightTextureUV);
 
-      gl_FragColor = vec4(color.r, color.g, color.b, 0.9);
+      gl_FragColor = vec4(color.r, color.g, color.b, {opacity});
     }
   */}).toString().split('\n').slice(1, -1).join('\n');
 
@@ -58,6 +58,8 @@
 
     this.size = typeof options.size === 'number' ? options.size : 20;
     this.margin = typeof options.margin === 'number' ? options.margin : 4;
+    this.height = typeof options.height === 'number' ? options.height : 10;
+    this.opacity = typeof options.opacity === 'number' ? options.opacity : 1;
 
     this.diffuse_texture = options.diffuse_texture;
     this.height_texture = options.height_texture;
@@ -100,7 +102,7 @@
           },
           heightValue: {
             type: 'f',
-            value: 12
+            value: this.height
           },
           heightTextureUV: {
             type: 'v2',
@@ -108,7 +110,7 @@
           }
         },
         vertexShader: displace_vert,
-        fragmentShader: displace_frag,
+        fragmentShader: displace_frag.replace('{opacity}', this.opacity),
         side: THREE.DoubleSide
       });
 
@@ -139,8 +141,7 @@
   };
 
   DepthScreen.prototype._updateTextures = function() {
-    // return;
-    var height_texture = this.height_texture,
+    var height_texture = this.diffuse_texture, // Uses diffuse textures black/white as height texture
         diffuse_texture = this.diffuse_texture;
 
     if (!diffuse_texture || !height_texture) {
