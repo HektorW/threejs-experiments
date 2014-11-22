@@ -26,7 +26,7 @@
 
       vec4 color = grayscale(texture2D(heightTexture, heightTextureUV));
       vec3 pos = position;
-      float value = 1.0 - color.r;
+      float value = color.r;
 
       pos.z *= value * heightValue;
       //if (pos.z < 0.0) pos.z = 0.0;
@@ -53,8 +53,8 @@
   function DepthScreen(options) {
     this.geometry = options.geometry || new THREE.BoxGeometry(1, 1, 1);
 
-    this.width_segments = options.width_segments || 40;
-    this.height_segments = options.height_segments || 40;
+    this.widthSegments = options.widthSegments || 40;
+    this.heightSegments = options.heightSegments || 40;
 
     this.size = typeof options.size === 'number' ? options.size : 20;
     this.margin = typeof options.margin === 'number' ? options.margin : 4;
@@ -72,23 +72,23 @@
     var scene = this.scene = new THREE.Scene();
 
     var geometry = this.geometry,
-        width_segments = this.width_segments,
-        height_segments = this.height_segments,
+        widthSegments = this.widthSegments,
+        heightSegments = this.heightSegments,
         size = this.size,
         margin = this.margin,
         halfSize = size / 2;
 
-    var pixelMeshes = this.pixelMeshes = new Array(this.width_segments * this.height_segments);
+    var pixelMeshes = this.pixelMeshes = new Array(this.widthSegments * this.heightSegments);
 
-    var centerX = width_segments / 2 * size + (width_segments - 1) * margin * 0.5;
-    var centerY = height_segments / 2 * size + (height_segments - 1) * margin * 0.5;
+    var centerX = widthSegments / 2 * size + (widthSegments - 1) * margin * 0.5;
+    var centerY = heightSegments / 2 * size + (heightSegments - 1) * margin * 0.5;
 
     for (var i = this.pixelMeshes.length; i--; ) {
-      var xIndex = (i % width_segments) + 1;
-      var yIndex = Math.floor(i / width_segments) + 1;
+      var xIndex = (i % widthSegments) + 1;
+      var yIndex = Math.floor(i / widthSegments) + 1;
 
-      var uvX = xIndex / width_segments;
-      var uvY = yIndex / height_segments;
+      var uvX = xIndex / widthSegments;
+      var uvY = yIndex / heightSegments;
 
       var material = new THREE.ShaderMaterial({
         uniforms: {
@@ -129,6 +129,118 @@
     }
 
     this._updateTextures();
+  };
+
+  DepthScreen.prototype.initGeometry = function() {
+    var geometry = new THREE.BufferGeometry();
+
+    var widthSegments = this.widthSegments,
+        heightSegments = this.heightSegments,
+        segmentsCount = widthSegments * heightSegments,
+        size = 1,        
+        halfSize = size / 2;
+
+
+    var boxVertexCount = 8;
+    var boxVertexPositionCount = boxVertexCount * 3;
+    var boxVertexTexcoordCount = boxVertexCount * 2;
+    var boxFaceCount = 12 * 3;
+
+    var positions = new Float32Array(segmentsCount * boxVertexPositionCount);
+    var texcoords = new Float32Array(segmentsCount * boxVertexTexcoordCount);
+    var faces = new Float32Array(segmentsCount * boxFaceCount);
+
+
+    var centerX = widthSegments / 2 * size + (widthSegments - 1);
+    var centerY = heightSegments / 2 * size + (heightSegments - 1);
+
+
+    var tempPositions = new Float32Array(boxVertexPositionCount);
+    var tempFaces = new Float32Array(boxFaceCount);
+
+    for (var i = 0; i < segmentsCount; ++i) {
+      var xIndex = (i % widthSegments) + 1;
+      var yIndex = Math.floor(i / widthSegments) + 1;
+
+      var uvX = xIndex / widthSegments;
+      var uvY = yIndex / heightSegments;
+
+      var positionX = xIndex * size + ((xIndex - 1) * margin) - centerX;
+      var positionY = yIndex * size + ((yIndex - 1) * margin) - centerY;
+
+      this._boxVertices(tempPositions, tempFaces, positionX, positionY, halfSize);
+
+      // Positions
+      var j = boxVertexPositionCount;
+      var startIndex = i * boxVertexPositionCount;
+      for ( ; j--; ) {
+        positions[startIndex + j] = tempPositions[j];
+      }
+      // Faces
+      j = boxFaceCount;
+      startIndex = i * boxFaceCount;
+      for ( ; j--; ) {
+        faces[startIndex + j] = tempFaces[j];
+      }
+      // Texcoords
+      j = boxVertexCount;
+      startIndex = i * boxVertexTexcoordCount;
+      for ( ; j--; ) {
+        texcoords[startIndex + j]     = uvX;
+        texcoords[startIndex + j + 1] = uvY;
+      }
+    }
+
+    geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.addAttribute('texcoord', new THREE.BufferAttribute(texcoords, 2));
+    geometry.addAttribute('index',    new THREE.BufferAttribute(faces, 3));
+  };
+
+  DepthScreen.prototype._boxVertices = function(positions, faces, x, y, size) {
+    /**
+     *
+     *         4----------5
+     *     0----------1   |
+     *     |   |      |   |
+     *     |   |      |   |
+     *     |   6------|---7
+     *     2----------3
+     */
+
+     positions[0]  = x-size; positions[1]  = y+size; positions[2]  = +size; // 1
+     positions[3]  = x+size; positions[4]  = y+size; positions[5]  = +size; // 2
+     positions[6]  = x-size; positions[7]  = y-size; positions[8]  = +size; // 3
+     positions[9]  = x+size; positions[10] = y-size; positions[11] = +size; // 4
+
+     positions[12] = x-size; positions[13] = y+size; positions[14] = -size; // 5
+     positions[15] = x+size; positions[16] = y+size; positions[17] = -size; // 6
+     positions[18] = x-size; positions[19] = y-size; positions[20] = -size; // 7
+     positions[21] = x+size; positions[22] = y-size; positions[23] = -size; // 8
+
+     var fi = 0;
+     // front
+     faces[fi++] = 0; faces[fi++] = 1; faces[fi++] = 2;
+     faces[fi++] = 1; faces[fi++] = 3; faces[fi++] = 2;
+
+     // right
+     faces[fi++] = 1; faces[fi++] = 5; faces[fi++] = 3;
+     faces[fi++] = 5; faces[fi++] = 7; faces[fi++] = 3;
+
+     // left
+     faces[fi++] = 4; faces[fi++] = 0; faces[fi++] = 6;
+     faces[fi++] = 0; faces[fi++] = 2; faces[fi++] = 6;
+
+     // back
+     faces[fi++] = 5; faces[fi++] = 4; faces[fi++] = 7;
+     faces[fi++] = 4; faces[fi++] = 6; faces[fi++] = 7;
+
+     // top
+     faces[fi++] = 4; faces[fi++] = 5; faces[fi++] = 0;
+     faces[fi++] = 5; faces[fi++] = 1; faces[fi++] = 0;
+
+     // bottom
+     faces[fi++] = 2; faces[fi++] = 3; faces[fi++] = 6;
+     faces[fi++] = 3; faces[fi++] = 7; faces[fi++] = 6;
   };
 
   DepthScreen.prototype.setHeightTexture = function(height_texture) {

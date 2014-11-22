@@ -8,6 +8,8 @@
  * Camera movement
  * Test in some different browsers
  * Use webcam
+ * Find luminosity of image
+ * More advanced depth calculation
  */
 
 
@@ -48,8 +50,8 @@ var App = (function() {
 
     this.depthScreen = new DepthScreen({
       diffuse_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/profile-image.jpg'),
-      width_segments: 64,
-      height_segments: 64,
+      widthSegments: 64,
+      heightSegments: 64,
       size: 1.0,
       margin: 0.0,
       height: 20,
@@ -57,7 +59,7 @@ var App = (function() {
     });
 
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000.0);
-    this.camera.position.z = Math.max(this.depthScreen.width_segments, this.depthScreen.height_segments) * (this.depthScreen.size + this.depthScreen.margin);
+    this.camera.position.z = Math.max(this.depthScreen.widthSegments, this.depthScreen.heightSegments) * (this.depthScreen.size + this.depthScreen.margin);
 
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setClearColor(0x000000, 1);
