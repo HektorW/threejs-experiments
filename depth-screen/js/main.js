@@ -31,6 +31,11 @@ var App = (function() {
     this.mouseMove = this.mouseMove.bind(this);
     this.onImageData = this.onImageData.bind(this);
 
+
+    this.columnHeight = 30;
+    this.columnHeightAnimationTime = this.columnHeightAnimationTimeMax = 1.0;
+
+
     this.initDOM();
     this.initTHREE();
     this.initFileHandler();
@@ -49,17 +54,15 @@ var App = (function() {
   App.prototype.initTHREE = function() {
 
     this.depthScreen = new DepthScreen({
-      diffuse_texture: THREE.ImageUtils.loadTexture('/depth-screen/res/profile-image.jpg'),
-      widthSegments: 64,
-      heightSegments: 64,
-      size: 1.0,
-      margin: 0.0,
+      texture: THREE.ImageUtils.loadTexture('/depth-screen/res/profile-image.jpg'),
+      widthSegments: 80,
+      heightSegments: 80,
       height: 20,
       opacity: 0.9
     });
 
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000.0);
-    this.camera.position.z = Math.max(this.depthScreen.widthSegments, this.depthScreen.heightSegments) * (this.depthScreen.size + this.depthScreen.margin);
+    this.camera.position.z = Math.max(this.depthScreen.widthSegments, this.depthScreen.heightSegments);
 
     this.renderer = new THREE.WebGLRenderer();
     this.renderer.setClearColor(0x000000, 1);
@@ -110,6 +113,10 @@ var App = (function() {
 
     this.camera.lookAt(this.depthScreen.scene.position);
 
+    this.columnHeightAnimationTime -= time.elapsed;
+    if (this.columnHeightAnimationTime < 0.0) this.columnHeightAnimationTime = 0.0;
+
+    this.depthScreen.setHeight(this.columnHeight * ((this.columnHeightAnimationTimeMax - this.columnHeightAnimationTime) / this.columnHeightAnimationTimeMax));
 
     this.depthScreen.draw(this.renderer, this.camera);
   };
@@ -118,7 +125,8 @@ var App = (function() {
 
 
   App.prototype.onImageData = function(imageData) {
-    this.depthScreen.setDiffuseTexture(THREE.ImageUtils.loadTexture(imageData.data));
+    this.columnHeightAnimationTime = this.columnHeightAnimationTimeMax;
+    this.depthScreen.setTexture(THREE.ImageUtils.loadTexture(imageData.data));
   };
 
   return App;
