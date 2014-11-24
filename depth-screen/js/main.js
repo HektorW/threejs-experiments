@@ -1,15 +1,18 @@
 /**
  * TODO:
  * DepthScreen
- *   not individual shaders but attributes in objects
+ *   [done] not individual shaders but attributes in objects
  *   switch between black/white height output
- *   animate height
+ *   [done] animate height
  * Resize dropped images
+ *   - keep aspect of image (fill with transparent)
  * Camera movement
  * Test in some different browsers
  * Use webcam
  * Find luminosity of image
  * More advanced depth calculation
+ * Gallery, slideshow
+ *   - animate between images
  */
 
 
