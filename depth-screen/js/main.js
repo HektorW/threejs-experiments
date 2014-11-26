@@ -35,7 +35,7 @@ var App = (function() {
     this.onImageData = this.onImageData.bind(this);
 
 
-    this.columnHeight = 30;
+    this.columnHeight = 10;
     this.columnHeightAnimationTime = this.columnHeightAnimationTimeMax = 1.0;
 
 
@@ -57,10 +57,10 @@ var App = (function() {
   App.prototype.initTHREE = function() {
 
     this.depthScreen = new DepthScreen({
-      texture: THREE.ImageUtils.loadTexture('/depth-screen/res/profile-image.jpg'),
-      widthSegments: 80,
-      heightSegments: 80,
-      height: 20,
+      texture: THREE.ImageUtils.loadTexture('/depth-screen/res/dt_beyonce.png'),
+      widthSegments: 50,
+      heightSegments: 50,
+      height: 10,
       opacity: 0.9
     });
 
