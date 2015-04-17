@@ -63,7 +63,7 @@
   DepthScreen.prototype.init = function() {
     var scene = this.scene = new THREE.Scene();
 
-    this.geometry = this.getScreenGeometry();
+    this.geometries = this.getScreenGeometry();
     this.material = new THREE.ShaderMaterial({
       uniforms: {
         heightTexture: {
@@ -89,13 +89,16 @@
     });
     this.material.transparent = true;
 
-    this.screenMesh = new THREE.Mesh(this.geometry, this.material);
+    this.screenMeshes = [];
+    for (var i = 0; i < this.geometries.length; i++) {
+      var mesh = new THREE.Mesh(this.geometries[i], this.material);
+      this.screenMeshes.push(mesh);
+      this.scene.add(mesh);
+    }
 
-    this.scene.add(this.screenMesh);
   };
 
   DepthScreen.prototype.getScreenGeometry = function() {
-    var geometry = new THREE.BufferGeometry();
 
     var widthSegments = this.widthSegments,
         heightSegments = this.heightSegments,
@@ -156,13 +159,18 @@
       }
     }
 
+    var geometries = [];
+    
+    var geometry = new THREE.BufferGeometry();
     geometry.addAttribute('uv', new THREE.BufferAttribute(texcoords, 2));
     geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3));
     geometry.addAttribute('index',    new THREE.BufferAttribute(faces, 1));
+
+    console.log('vertices: ', positions.length / 3);
     
     geometry.computeBoundingBox();
 
-    return geometry;
+    return [geometry];
   };
 
   DepthScreen.prototype._boxVertices = function(positions, faces, x, y, size, faceIndex) {

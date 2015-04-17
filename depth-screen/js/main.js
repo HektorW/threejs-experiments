@@ -4,6 +4,7 @@
  *   [done] not individual shaders but attributes in objects
  *   switch between black/white height output
  *   [done] animate height
+ *   split into multiple buffers when vertex count is larger than 65k
  * Resize dropped images
  *   - keep aspect of image (fill with transparent)
  * Camera movement
@@ -58,8 +59,8 @@ var App = (function() {
 
     this.depthScreen = new DepthScreen({
       texture: THREE.ImageUtils.loadTexture('/depth-screen/res/profile-image.jpg'),
-      widthSegments: 80,
-      heightSegments: 80,
+      widthSegments: 90,
+      heightSegments: 90,
       height: 20,
       opacity: 0.9
     });
