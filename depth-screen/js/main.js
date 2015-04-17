@@ -57,7 +57,7 @@ var App = (function() {
   App.prototype.initTHREE = function() {
 
     this.depthScreen = new DepthScreen({
-      texture: THREE.ImageUtils.loadTexture('/depth-screen/res/dt_beyonce.png'),
+      texture: THREE.ImageUtils.loadTexture('res/dt_beyonce.png'),
       widthSegments: 50,
       heightSegments: 50,
       height: 10,
