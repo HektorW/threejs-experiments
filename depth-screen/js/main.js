@@ -36,7 +36,7 @@ var App = (function() {
     this.onImageData = this.onImageData.bind(this);
 
 
-    this.columnHeight = 30;
+    this.columnHeight = 10;
     this.columnHeightAnimationTime = this.columnHeightAnimationTimeMax = 1.0;
 
 
